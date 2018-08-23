@@ -926,7 +926,7 @@ serialize_request_parameters(ForeignScanState* node, StringInfoData *url)
         bool        param_first = true;
         char        char_first = '?', *ch;
         ListCell   *lc;
-        List       *quals = list_copy(node->ss.ps.qual);
+        List       *quals = list_copy(node->ss.ps.plan->qual);
 
         /* check if we have '?' already in the url -
          * append our parameters starting with '&', not '?' */
@@ -941,7 +941,7 @@ serialize_request_parameters(ForeignScanState* node, StringInfoData *url)
         {
             ExprState       *state = lfirst(lc);
 
-            char *param = www_param((Node *) state->expr,
+            char *param = www_param((Node *) state,
                             node->ss.ss_currentRelation->rd_att);
 
             if (param)
@@ -956,7 +956,7 @@ serialize_request_parameters(ForeignScanState* node, StringInfoData *url)
                 appendStringInfoString(url, param);
 
                 /* take it from original qual */
-                node->ss.ps.qual = list_delete(node->ss.ps.qual, (void *) state);
+                node->ss.ps.plan->qual = list_delete(node->ss.ps.plan->qual, (void *) state);
             }
             else
                 ereport(ERROR, (errcode(ERRCODE_SYNTAX_ERROR), errmsg("Unknown qual")));
